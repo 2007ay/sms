@@ -25,19 +25,25 @@ export class StudentRoute {
     this.route.post('/retrievefornotifications', this.getRetrieveForNotifications.bind(this));
   }
 
-  private registerStudent(req, res, next): void {
+  private validate(emails) {
 
-    debugger;
-    const payload: IRegisterStudentPayload = req.body;
-    const students = payload.students;
-    let isValidEmail = students.length ? true : false;
-    students.forEach((email) => {
-      if (isValidEmail) {
-        isValidEmail = emailValidator(email);
+    if (!emails) return false;
+    
+    let isValid = emails.length ? true : false;
+    emails.forEach((email) => {
+      if (isValid) {
+        isValid = emailValidator(email);
       }
     });
+    return isValid
+  }
 
-    if (emailValidator(payload.teacher) && isValidEmail) {
+
+  private registerStudent(req, res, next): void {
+    const payload: IRegisterStudentPayload = req.body;
+    const students = payload.students;
+    let isValid = this.validate(students);
+    if (emailValidator(payload.teacher) && isValid) {
       this.studentHandler
         .registerStudent(payload)
         .then(result => ResponseSuccess(res, result, HTTPCODES.SUCCESS), next);
@@ -63,19 +69,23 @@ export class StudentRoute {
   }
 
   private getCommonStudent(req, res, next): void {
-    this.studentHandler.getCommonStudent(req.body).then(
-      result => {
-        return ResponseSuccess(res, result, HTTPCODES.SUCCESS);
-      },
-      err => {
-        next(err);
-      }
-    );
+
+    let { teacher } = req.query;
+    teacher = typeof (teacher) == 'string' ? [teacher] : teacher;
+    let isValid = this.validate(teacher);
+    if (isValid) {
+      this.studentHandler.getCommonStudent(teacher).then(
+        result => {
+          return ResponseSuccess(res, result, HTTPCODES.SUCCESS);
+        }, next
+      );
+    } else {
+      ResponseFailure(res, MESSAGES.INVALIED_EMAIL_LIST, HTTPCODES.BAD_REQUEST);
+    }
   }
 
   private getRetrieveForNotifications(req, res, next): void {
     const { teacher, notification } = req.body;
-
     if (!emailValidator(teacher) || !notification) {
       return next(ERR_MESSAGES.NOTIFICATION_MISSING);
     } else {
@@ -84,10 +94,7 @@ export class StudentRoute {
         .then(
           result => {
             return ResponseSuccess(res, result, HTTPCODES.SUCCESS);
-          },
-          err => {
-            next(err);
-          }
+          }, next
         );
     }
   }

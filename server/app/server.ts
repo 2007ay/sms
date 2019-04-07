@@ -5,7 +5,7 @@ import { MySqlConnector } from './dataLayer/mySqlConnector';
 import { HTTPCODES } from "../app/helpers/index";
 
 export class AppServer {
-  private server: any;
+  public server: any; // public due to mocha
   private port = 4000;
   private routes: InitRouters;
   constructor() {
@@ -40,8 +40,6 @@ export class AppServer {
   }
   private start(): void {
 
-
-
     this.server.use((req: any, res: any) => {
       res.status(HTTPCODES.NOT_FOUND).send(`URL Not Found ${req.url}`);
     });
@@ -51,21 +49,13 @@ export class AppServer {
     });
 
     let instance = MySqlConnector.getInstance();
-    instance.createConnection().then(
-      () => {
-        this.server.listen(this.port, () => {
-          console.log(`Application started at port ${this.port}`);
-        });
-      },
-      err => {
-        this.server.listen(this.port, () => {
-          console.log(`Application started at port ${this.port}`);
-        });
-        console.error(err);
-      }
-    );
+    instance.createConnection().then(() => {
+      this.server.listen(this.port, () => {
+        console.log(`Application started at port ${this.port}`);
+      });
+    }, console.error);
   }
 }
 
-let server = new AppServer();
-module.exports = server;
+let appServer: AppServer = new AppServer();
+module.exports = appServer.server; // for testing

@@ -45,14 +45,9 @@ class AppServer {
             this.server.listen(this.port, () => {
                 console.log(`Application started at port ${this.port}`);
             });
-        }, err => {
-            this.server.listen(this.port, () => {
-                console.log(`Application started at port ${this.port}`);
-            });
-            console.error(err);
-        });
+        }, console.error);
     }
 }
 exports.AppServer = AppServer;
-let server = new AppServer();
-module.exports = server;
+let appServer = new AppServer();
+module.exports = appServer.server; // for testing

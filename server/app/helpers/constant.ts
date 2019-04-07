@@ -1,5 +1,6 @@
 export const HTTPCODES = {
-  SUCCESS: 204,
+  SUCCESS: 200,
+  NO_CONT: 204,
   BAD_REQUEST: 400,
   APP_ERROR: 500,
   NOT_FOUND: 404
@@ -15,7 +16,7 @@ export const MESSAGES = {
 };
 
 export const ERR_MESSAGES = {
-  STUDENT_EXIST: 'student already exist',
-  EMAIL_MISSING: 'Please check email',
-  NOTIFICATION_MISSING: 'Please send valid notification'
+  STUDENT_EXIST: 'Student already exist',
+  EMAIL_MISSING: 'Unable to found record',
+  NOTIFICATION_MISSING: 'Emaild is not found in records'
 };

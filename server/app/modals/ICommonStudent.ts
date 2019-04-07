@@ -3,6 +3,10 @@ export interface ICommonStudent {
   student: Array<string>;
 }
 
-export interface ICommonStudentResult {
+export interface INotificationResult {
   recipients: Array<string>
+}
+
+export interface ICommonStudentResult {
+  students: Array<string>
 }

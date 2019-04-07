@@ -1,0 +1,44 @@
+{
+  "invalid teacher email id test": {
+    "route": "registerStudent",
+    "payload": {
+      "students": [
+        "studentmiche@example.com"
+      ]
+    },
+    "jsonResponse": {
+      "success": false,
+      "data": "Please send the valid student list"
+    }
+  },
+  "invalid students email id test": {
+    "route": "registerStudent",
+    "payload": {
+      "teacher": "teacher2@gmail.com"
+    },
+    "jsonResponse": {
+      "success": false,
+      "data": "Please send the valid student list"
+    }
+  },
+  "valid students email id test": {
+    "route": "registerStudent",
+    "payload": {
+      "teacher": "teacher2@gmail.com"
+    },
+    "jsonResponse": {
+      "success": true,
+      "data": "Student list inseted successfully"
+    }
+  },
+  "duplicate student email id test": {
+    "route": "registerStudent",
+    "payload": {
+      "teacher": "teacher2@gmail.com"
+    },
+    "jsonResponse": {
+      "success": false,
+      "data": "Please send the valid student list"
+    }
+  }
+}

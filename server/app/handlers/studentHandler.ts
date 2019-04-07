@@ -1,35 +1,30 @@
 import { MySqlConnector } from '../dataLayer/mySqlConnector';
 import { Tables } from '../dataLayer/tableSchema';
-import { IRegisterStudentPayload, ICommonStudent, ICommonStudentResult } from '../modals/index';
+import { IRegisterStudentPayload, INotificationResult, ICommonStudentResult } from '../modals/index';
 import {
   MESSAGES,
   ERR_MESSAGES,
-  emailValidator,
-  getEmailIds
+  sqlParse,
+  getEmailIds,
+  getInClauseText
 } from '../helpers/index';
 
 export class StudentHandler {
+
   registerStudent<T>(payload: IRegisterStudentPayload): Promise<string> {
     return new Promise((resolve, reject) => {
-
-      const teacher = payload.teacher;
-      debugger;
-      let emails = "";
-      payload.students.forEach((e, index) => {
-        emails += "'" + e + "'";
-        if ((index < payload.students.length - 1)) {
-          emails = emails + ",";
-        }
-      });
       let connection = MySqlConnector.getInstance().connection;
+      const teacher = payload.teacher;
+      let emails = getInClauseText(payload.students);
       const selectQuery = `select studentEmailId from ${Tables.Records} where teacherEmailId = '${teacher}' and (studentEmailId in (${emails}))`;
       connection.query(selectQuery, (error, results) => {
-        console.log(results);
         if (error || results.length) {
           if (error) {
             reject(error);
           } else {
-            reject(`${ERR_MESSAGES.STUDENT_EXIST} : ${results.join(',')}`);
+            results = sqlParse(results);
+            const str = results.map((r) => r.studentEmailId);
+            reject(`${ERR_MESSAGES.STUDENT_EXIST} : ${str}`);
           }
         } else {
           let records = [];
@@ -59,25 +54,32 @@ export class StudentHandler {
           const updateQuery = `UPDATE ${Tables.Records} SET suspended = true where studentEmailId = ${email} `;
           connection.query(updateQuery, err => {
             if (err) reject(err);
-            else {
-              resolve(`${email} ${MESSAGES.STUDENT_SUSPENDED}`);
-            }
+            else resolve(`${email} ${MESSAGES.STUDENT_SUSPENDED}`);
           });
-        } else {
-          return reject(`${ERR_MESSAGES.EMAIL_MISSING}, ${email}`);
-        }
+        } else return reject(`${ERR_MESSAGES.EMAIL_MISSING}, ${email}`);
       });
     });
   }
 
-  getCommonStudent(payload: Array<string>): Promise<ICommonStudent> {
+  getCommonStudent(payload: Array<string>): Promise<ICommonStudentResult> {
+
     return new Promise((resolve, reject) => {
+
       let connection = MySqlConnector.getInstance().connection;
-      const sqlQuery = ``;
-      connection.query(sqlQuery, (err, result) => {
+      const emails = getInClauseText(payload);
+
+      const sqlQuery = `select DISTINCT(studentEmailId) from ${Tables.Records} where teacherEmailId in (${emails})
+      group by studentEmailId having count(studentEmailId)`;
+
+      connection.query(sqlQuery, (err, sqlResp) => {
         if (err) reject(err);
         else {
-          resolve(result);
+          sqlResp = sqlParse(sqlResp);
+          sqlResp = sqlResp.map(resp => resp.studentEmailId);
+          const commonResult: ICommonStudentResult = {
+            students: sqlResp
+          }
+          resolve(commonResult);
         }
       });
     });
@@ -86,24 +88,49 @@ export class StudentHandler {
   getRetrieveForNotifications(
     teacher: string,
     notification: string
-  ): Promise<ICommonStudentResult> {
+  ): Promise<INotificationResult> {
+
     return new Promise((resolve, reject) => {
-      let connection = MySqlConnector.getInstance().connection;
-      const emails = getEmailIds(notification);
 
-      const sqlQuery = `select DISTINCT(studentEmailId) from ${Tables.Records}  where teacherEmailId = ${teacher} and suspended = false  or (suspended = false and studentEmailId in (${emails.join(',')}))`
+      const techerPromise = new Promise((tResolve, tReject) => {
+        let connection = MySqlConnector.getInstance().connection;
+        const sqlQuery = `select DISTINCT(studentEmailId) from ${Tables.Records}  where teacherEmailId = '${teacher}' and suspended = false`
 
-      connection.query(sqlQuery, (err, result) => {
-        if (err) reject(err);
-        else {
-          if (result.length) {
-            let commonResult: ICommonStudentResult = { recipients: result }
-            resolve(commonResult);
-          } else {
-            reject(ERR_MESSAGES.NOTIFICATION_MISSING)
+        connection.query(sqlQuery, (err, result) => {
+          if (err) tReject(err);
+          else {
+            if (result.length) {
+              tResolve(result);
+            } else {
+              tReject(ERR_MESSAGES.NOTIFICATION_MISSING)
+            }
           }
-        }
+        });
       });
-    });
+
+      const studentPromise = new Promise((sResolve, sReject) => {
+        let connection = MySqlConnector.getInstance().connection;
+        const emails = getEmailIds(notification);
+        const sqlQuery = `select DISTINCT(studentEmailId) from ${Tables.Records}  where suspended = false and studentEmailId in (${getInClauseText(emails)});`;
+        connection.query(sqlQuery, (err, result) => {
+          if (err) sReject(err);
+          else {
+            if (result.length) {
+              sResolve(result);
+            } else {
+              sReject(`${emails} ${ERR_MESSAGES.NOTIFICATION_MISSING}`);
+            }
+          }
+        });
+      });
+
+      return Promise.all([techerPromise, studentPromise]).then((resultSet) => {
+        let commonResult: INotificationResult = { recipients: [] }
+        sqlParse(resultSet).forEach((record) => {
+          record.forEach(element => commonResult.recipients.push(element.studentEmailId));
+        });
+        resolve(commonResult);
+      }, reject);
+    })
   }
 }

@@ -18,7 +18,14 @@ function emailValidator(email) {
 }
 exports.emailValidator = emailValidator;
 function getEmailIds(txt) {
-    const matches = txt.match(constant_1.emailRegx, 'gi');
+    const matches = txt.match(/(^|@)([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi) || [];
+    matches.map((match) => {
+        return match.split('@')[1].join('@');
+    });
     return matches;
 }
 exports.getEmailIds = getEmailIds;
+function sqlParse(record) {
+    return JSON.parse(JSON.stringify(record));
+}
+exports.sqlParse = sqlParse;

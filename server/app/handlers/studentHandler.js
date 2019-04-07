@@ -6,25 +6,19 @@ const index_1 = require("../helpers/index");
 class StudentHandler {
     registerStudent(payload) {
         return new Promise((resolve, reject) => {
-            const teacher = payload.teacher;
-            debugger;
-            let emails = "";
-            payload.students.forEach((e, index) => {
-                emails += "'" + e + "'";
-                if ((index < payload.students.length - 1)) {
-                    emails = emails + ",";
-                }
-            });
             let connection = mySqlConnector_1.MySqlConnector.getInstance().connection;
+            const teacher = payload.teacher;
+            let emails = index_1.getInClauseText(payload.students);
             const selectQuery = `select studentEmailId from ${tableSchema_1.Tables.Records} where teacherEmailId = '${teacher}' and (studentEmailId in (${emails}))`;
             connection.query(selectQuery, (error, results) => {
-                console.log(results);
                 if (error || results.length) {
                     if (error) {
                         reject(error);
                     }
                     else {
-                        reject(`${index_1.ERR_MESSAGES.STUDENT_EXIST} : ${results.join(',')}`);
+                        results = index_1.sqlParse(results);
+                        const str = results.map((r) => r.studentEmailId);
+                        reject(`${index_1.ERR_MESSAGES.STUDENT_EXIST} : ${str}`);
                     }
                 }
                 else {
@@ -55,48 +49,77 @@ class StudentHandler {
                     connection.query(updateQuery, err => {
                         if (err)
                             reject(err);
-                        else {
+                        else
                             resolve(`${email} ${index_1.MESSAGES.STUDENT_SUSPENDED}`);
-                        }
                     });
                 }
-                else {
+                else
                     return reject(`${index_1.ERR_MESSAGES.EMAIL_MISSING}, ${email}`);
-                }
             });
         });
     }
     getCommonStudent(payload) {
         return new Promise((resolve, reject) => {
             let connection = mySqlConnector_1.MySqlConnector.getInstance().connection;
-            const sqlQuery = ``;
-            connection.query(sqlQuery, (err, result) => {
+            const emails = index_1.getInClauseText(payload);
+            const sqlQuery = `select DISTINCT(studentEmailId) from ${tableSchema_1.Tables.Records} where teacherEmailId in (${emails})
+      group by studentEmailId having count(studentEmailId)`;
+            connection.query(sqlQuery, (err, sqlResp) => {
                 if (err)
                     reject(err);
                 else {
-                    resolve(result);
+                    sqlResp = index_1.sqlParse(sqlResp);
+                    sqlResp = sqlResp.map(resp => resp.studentEmailId);
+                    const commonResult = {
+                        students: sqlResp
+                    };
+                    resolve(commonResult);
                 }
             });
         });
     }
     getRetrieveForNotifications(teacher, notification) {
         return new Promise((resolve, reject) => {
-            let connection = mySqlConnector_1.MySqlConnector.getInstance().connection;
-            const emails = index_1.getEmailIds(notification);
-            const sqlQuery = `select DISTINCT(studentEmailId) from ${tableSchema_1.Tables.Records}  where teacherEmailId = ${teacher} and suspended = false  or (suspended = false and studentEmailId in (${emails.join(',')}))`;
-            connection.query(sqlQuery, (err, result) => {
-                if (err)
-                    reject(err);
-                else {
-                    if (result.length) {
-                        let commonResult = { recipients: result };
-                        resolve(commonResult);
-                    }
+            const techerPromise = new Promise((tResolve, tReject) => {
+                let connection = mySqlConnector_1.MySqlConnector.getInstance().connection;
+                const sqlQuery = `select DISTINCT(studentEmailId) from ${tableSchema_1.Tables.Records}  where teacherEmailId = '${teacher}' and suspended = false`;
+                connection.query(sqlQuery, (err, result) => {
+                    if (err)
+                        tReject(err);
                     else {
-                        reject(index_1.ERR_MESSAGES.NOTIFICATION_MISSING);
+                        if (result.length) {
+                            tResolve(result);
+                        }
+                        else {
+                            tReject(index_1.ERR_MESSAGES.NOTIFICATION_MISSING);
+                        }
                     }
-                }
+                });
             });
+            const studentPromise = new Promise((sResolve, sReject) => {
+                let connection = mySqlConnector_1.MySqlConnector.getInstance().connection;
+                const emails = index_1.getEmailIds(notification);
+                const sqlQuery = `select DISTINCT(studentEmailId) from ${tableSchema_1.Tables.Records}  where suspended = false and studentEmailId in (${index_1.getInClauseText(emails)});`;
+                connection.query(sqlQuery, (err, result) => {
+                    if (err)
+                        sReject(err);
+                    else {
+                        if (result.length) {
+                            sResolve(result);
+                        }
+                        else {
+                            sReject(`${emails} ${index_1.ERR_MESSAGES.NOTIFICATION_MISSING}`);
+                        }
+                    }
+                });
+            });
+            return Promise.all([techerPromise, studentPromise]).then((resultSet) => {
+                let commonResult = { recipients: [] };
+                index_1.sqlParse(resultSet).forEach((record) => {
+                    record.forEach(element => commonResult.recipients.push(element.studentEmailId));
+                });
+                resolve(commonResult);
+            }, reject);
         });
     }
 }

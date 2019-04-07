@@ -16,17 +16,22 @@ class StudentRoute {
         this.route.get('/commonstudents', this.getCommonStudent.bind(this));
         this.route.post('/retrievefornotifications', this.getRetrieveForNotifications.bind(this));
     }
-    registerStudent(req, res, next) {
-        debugger;
-        const payload = req.body;
-        const students = payload.students;
-        let isValidEmail = students.length ? true : false;
-        students.forEach((email) => {
-            if (isValidEmail) {
-                isValidEmail = index_1.emailValidator(email);
+    validate(emails) {
+        if (!emails)
+            return false;
+        let isValid = emails.length ? true : false;
+        emails.forEach((email) => {
+            if (isValid) {
+                isValid = index_1.emailValidator(email);
             }
         });
-        if (index_1.emailValidator(payload.teacher) && isValidEmail) {
+        return isValid;
+    }
+    registerStudent(req, res, next) {
+        const payload = req.body;
+        const students = payload.students;
+        let isValid = this.validate(students);
+        if (index_1.emailValidator(payload.teacher) && isValid) {
             this.studentHandler
                 .registerStudent(payload)
                 .then(result => appUtil_1.ResponseSuccess(res, result, index_1.HTTPCODES.SUCCESS), next);
@@ -47,11 +52,17 @@ class StudentRoute {
         }
     }
     getCommonStudent(req, res, next) {
-        this.studentHandler.getCommonStudent(req.body).then(result => {
-            return appUtil_1.ResponseSuccess(res, result, index_1.HTTPCODES.SUCCESS);
-        }, err => {
-            next(err);
-        });
+        let { teacher } = req.query;
+        teacher = typeof (teacher) == 'string' ? [teacher] : teacher;
+        let isValid = this.validate(teacher);
+        if (isValid) {
+            this.studentHandler.getCommonStudent(teacher).then(result => {
+                return appUtil_1.ResponseSuccess(res, result, index_1.HTTPCODES.SUCCESS);
+            }, next);
+        }
+        else {
+            appUtil_1.ResponseFailure(res, index_1.MESSAGES.INVALIED_EMAIL_LIST, index_1.HTTPCODES.BAD_REQUEST);
+        }
     }
     getRetrieveForNotifications(req, res, next) {
         const { teacher, notification } = req.body;
@@ -63,9 +74,7 @@ class StudentRoute {
                 .getRetrieveForNotifications(teacher, notification)
                 .then(result => {
                 return appUtil_1.ResponseSuccess(res, result, index_1.HTTPCODES.SUCCESS);
-            }, err => {
-                next(err);
-            });
+            }, next);
         }
     }
 }

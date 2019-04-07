@@ -8,7 +8,8 @@ con.connect(function (err, result) {
         console.log(err)
     } else {
         //createDefaultDB();
-        selectQuery()
+        //selectQuery()
+        insertQuery();
     }
 });
 
@@ -19,6 +20,13 @@ function selectQuery() {
         } else {
             console.log(JSON.parse(JSON.stringify(r)));
         }
+    });
+}
+
+function insertQuery() {
+    con.query('insert  into `records`(`studentEmailId`,`teacherEmailId`,`suspended`) values ("studenthon2@example.com","teacherken2@example.com", false)', (err, result) => {
+        if (err) console.log(err);
+        else console.log("data inserted");
     });
 }
 
@@ -38,10 +46,7 @@ function createDefaultDB() {
                             if (err) console.log(err);
                             else {
                                 console.log("table created");
-                                con.query('insert  into `records`(`studentEmailId`,`teacherEmailId`,`suspended`) values ("studentbob@example.com","teacherken@example.com", false)', (err, result) => {
-                                    if (err) console.log(err);
-                                    else console.log("data inserted");
-                                });
+                                insertQuery();
                             }
                         });
                     }
