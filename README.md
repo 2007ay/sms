@@ -3,6 +3,7 @@
 PRE REQUESTIES :
 1) NODE JS 
 2) MY SQL
+3) To create database please run sms_sql_script.sql which is at root folder
 
 - npm install
 - npm run dev
