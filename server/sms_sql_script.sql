@@ -1,6 +1,6 @@
-CREATE DATABASE /*!32312 IF NOT EXISTS*/`srs_portal` /*!40100 DEFAULT CHARACTER SET latin1 */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/`sms_portal` /*!40100 DEFAULT CHARACTER SET latin1 */;
 
-USE `srs_portal`;
+USE `sms_portal`;
 
 
 CREATE TABLE `records` (
