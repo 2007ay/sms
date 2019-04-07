@@ -1,5 +1,4 @@
 import { emailRegx } from './constant';
-import { debug } from 'util';
 
 export function ResponseSuccess(res, data, code) {
   return res.status(code).json({ success: true, data: data });

@@ -67,11 +67,11 @@ export class StudentHandler {
 
       let connection = MySqlConnector.getInstance().connection;
       const emails = getInClauseText(payload);
-
-      const sqlQuery = `select DISTINCT(studentEmailId) from ${Tables.Records} where teacherEmailId in (${emails})
+      let singQuery = `select DISTINCT(studentEmailId) from ${Tables.Records} where teacherEmailId = '${payload[0]}' `;
+      let manyQuery = `select DISTINCT(studentEmailId) from ${Tables.Records} where teacherEmailId in (${emails})
       group by studentEmailId having count(studentEmailId)`;
-
-      connection.query(sqlQuery, (err, sqlResp) => {
+      const query = payload.length == 1 ? singQuery : manyQuery;
+      connection.query(query, (err, sqlResp) => {
         if (err) reject(err);
         else {
           sqlResp = sqlParse(sqlResp);

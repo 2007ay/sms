@@ -10,8 +10,7 @@ const fs = require('fs'),
     sinon = require('sinon'),
     bluebird = require('bluebird');
 
-const StudentHandler = require('../app/handlers/studentHandler').StudentHandler;
-
+const StudentHandler = require('../dist/app/handlers/studentHandler').StudentHandler;
 
 chai.use(chaiAsPromised);
 

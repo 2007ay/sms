@@ -7,8 +7,8 @@
     "start": "node ./app/server.js",
     "server-prep-prod": "node ./build/clear.js && tsc",
     "prep-prod": "npm run server-prep-prod && node ./build/taskRunner.js && cd dist && zip -r  sms-app .",
-    "test": "mocha --require babel-core/register --bail test/**/*.js",
-    "dev": "npm run server-prep-prod && node ./build/taskRunner.js && cd dist && npm run start"
+    "dev": "npm run server-prep-prod && node ./build/taskRunner.js && cd dist && npm run start",
+    "test": "npm run server-prep-prod && node ./build/taskRunner.js && mocha --require babel-core/register --bail  test/**/*.js"
   },
   "author": "Ashish Yadav",
   "license": "ISC",

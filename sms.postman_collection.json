@@ -1,0 +1,117 @@
+{
+	"info": {
+		"_postman_id": "2f2d1ff5-9f5d-407e-b549-b49685e87eb1",
+		"name": "sms",
+		"description": "API's to update student information in the records table",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "register",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"teacher\": \"teacher2@gmail.com\",\n  \"students\": [\n    \"studentmiche1@example.com\"\n  ]\n}"
+				},
+				"url": "http://localhost:8081/api/register",
+				"description": "student registeration"
+			},
+			"response": []
+		},
+		{
+			"name": "suspend",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"student\": \"studenthon4@example.com\"\n}"
+				},
+				"url": "http://localhost:8081/api/suspend",
+				"description": "student registeration"
+			},
+			"response": []
+		},
+		{
+			"name": "retrievefornotifications",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"teacher\": \"teacherken@example.com\",\n  \"notification\": \"Hello students! @studentagnes@example.com @studentmiche@example.com\"\n}"
+				},
+				"url": "http://localhost:8081/api/retrievefornotifications"
+			},
+			"response": []
+		},
+		{
+			"name": "commonstudents",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://localhost:8081/api/commonstudents?teacher=teacherken@gmail.com",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"commonstudents"
+					],
+					"query": [
+						{
+							"key": "teacher",
+							"value": "teacherken@gmail.com"
+						},
+						{
+							"key": "teacher",
+							"value": "teacherken2@gmail.com",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
