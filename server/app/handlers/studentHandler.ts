@@ -12,7 +12,9 @@ import {
 export class StudentHandler {
 
   registerStudent<T>(payload: IRegisterStudentPayload): Promise<string> {
+
     return new Promise((resolve, reject) => {
+
       let connection = MySqlConnector.getInstance().connection;
       const teacher = payload.teacher;
       let emails = getInClauseText(payload.students);
@@ -42,16 +44,17 @@ export class StudentHandler {
   }
 
   suspendStudent(email: string): Promise<string> {
+
     return new Promise((resolve, reject) => {
+
       const query = `select * from ${
         Tables.Records
-        } where studentEmailId = ${email}`;
+        } where studentEmailId = '${email}'`;
       let connection = MySqlConnector.getInstance().connection;
-
       connection.query(query, (err, results) => {
         if (err) reject(err);
         else if (results.length) {
-          const updateQuery = `UPDATE ${Tables.Records} SET suspended = true where studentEmailId = ${email} `;
+          const updateQuery = `UPDATE ${Tables.Records} SET suspended = true where studentEmailId = '${email}'`;
           connection.query(updateQuery, err => {
             if (err) reject(err);
             else resolve(`${email} ${MESSAGES.STUDENT_SUSPENDED}`);

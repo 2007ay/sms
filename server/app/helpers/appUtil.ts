@@ -17,10 +17,7 @@ export function emailValidator(email) {
 
 export function getEmailIds(txt) {
   const matches = txt.match(/(^|@)([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi) || [];
-  matches.map((match) => {
-    return match.split('@')[1].join('@');
-  })
-  return matches;
+  return matches.map((match) => match.substr(1));
 }
 
 export function sqlParse(record) {
