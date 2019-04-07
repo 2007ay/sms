@@ -5,9 +5,11 @@ const bodyParser = require('body-parser');
 const initRouters_1 = require("./routers/initRouters");
 const mySqlConnector_1 = require("./dataLayer/mySqlConnector");
 const index_1 = require("../app/helpers/index");
+const config = require('config');
+const serverConfig = config.get('server');
 class AppServer {
     constructor() {
-        this.port = 4000;
+        this.port = serverConfig.port || 8081;
         this.server = express();
         this.routes = new initRouters_1.InitRouters();
         this.init();

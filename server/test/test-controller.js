@@ -56,10 +56,4 @@ describe('UserRepository', function (done) {
             .catch(err => done(err));
     });
 
-    // it('rejects promises when there is a mysql error', function () {
-    //     var expectation = mysqlMock.expects('query')
-    //         .once()
-    //         .callsArgWith(2, 'example error', null, null);
-    //     return userRepository.getUserByName('fred').should.be.rejectedWith('example error');
-    // });
 });

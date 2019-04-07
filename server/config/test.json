@@ -1,0 +1,11 @@
+{
+    "server": {
+        "port": 8081
+    },
+    "dbConfig": {
+        "host": "localhost:3306",
+        "user": "root",
+        "password": "Master_2019",
+        "database": "sms_portal"
+    }
+}

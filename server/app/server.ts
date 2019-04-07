@@ -4,9 +4,11 @@ import { InitRouters } from './routers/initRouters';
 import { MySqlConnector } from './dataLayer/mySqlConnector';
 import { HTTPCODES } from "../app/helpers/index";
 
+const config = require('config');
+const serverConfig = config.get('server');
 export class AppServer {
   public server: any; // public due to mocha
-  private port = 4000;
+  private port = serverConfig.port || 8081;
   private routes: InitRouters;
   constructor() {
     this.server = express();

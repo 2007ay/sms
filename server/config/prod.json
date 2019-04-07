@@ -1,8 +1,11 @@
 {
+    "server": {
+        "port": 8081
+    },
     "dbConfig": {
-        "host": "localhost",
-        "user": "me",
-        "password": "secret",
-        "database": "my_db"
+        "host": "mysqlinstance.cghqijopfrpe.ap-southeast-1.rds.amazonaws.com",
+        "user": "master",
+        "password": "Master_2019",
+        "database": "sms_portal"
     }
 }
