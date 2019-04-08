@@ -3,7 +3,8 @@
 PRE REQUESTIES :
 1) NODE JS 
 2) MY SQL
-3) To create database please run sms_sql_script.sql which is at root folder
+3) Typescript should be install (npm install typescript -g)
+4) To create database please run sms_sql_script.sql which is at root folder
 
 - npm install
 - npm run dev
@@ -22,6 +23,10 @@ PRE REQUESTIES :
  - Postman collection : https://www.getpostman.com/collections/76ea835255cbc89df063
   
 # TEST RUN
+
+PRE REQUESTIES :
+1) run either sql script or dbHandler to create test db
+
  - npm install
  - npm run test
 

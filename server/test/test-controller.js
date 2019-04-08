@@ -1,58 +1,162 @@
 'use strict';
+process.env.NODE_ENV = 'test';
 
-const fs = require('fs'),
-    glob = require('glob'),
-    chai = require('chai'),
-    should = chai.should(),
-    expect = chai.expect,
-    chaiAsPromised = require('chai-as-promised'),
-    Mysql = require('mysql'),
-    sinon = require('sinon'),
-    bluebird = require('bluebird');
+const chai = require('chai');
+const HTTPCODES = require('../app/helpers/constant').HTTPCODES;
+const app = require('../app/server.js');
 
-const StudentHandler = require('../dist/app/handlers/studentHandler').StudentHandler;
+chai.use(require('chai-http'));
 
-chai.use(chaiAsPromised);
+const expect = chai.expect;
+const should = chai.should();
 
-const fixtures = {};
-glob.sync(`${__dirname}/cases/*`).forEach(f => {
-    let testCase = JSON.parse(fs.readFileSync(f));
-    for (let key of Object.keys(testCase)) {
-        fixtures[key] = testCase[key];
-    }
-});
+const student1 = "s1@gmail.com";
+const teacher1 = "t1@gmail.com";
 
-describe('UserRepository', function (done) {
-    var mysqlConnection = Mysql.createConnection({
-        host: 'localhost'
+describe('sms api Test', () => {
+
+    // Invalid path test
+    describe('server test', () => {
+        it('should return 404', (done) => {
+            chai.request(app)
+                .get('/')
+                .end((err, res) => {
+                    should.not.exist(err);
+                    res.should.have.status(HTTPCODES.NOT_FOUND);
+                    done();
+                });
+        });
     });
-    var mysqlMock = sinon.mock(mysqlConnection);
-    const studentHandler = new StudentHandler();
 
+    // register api test
+    describe('POST /api/register', () => {
 
-    it('generates the proper select query when fetching a user and return promise', function (done) {
-        var results = [{
-            studentEmailId: 'studentmiche1@example.com',
-            teacherEmailId: 'teacher2@gmail.com'
-        }];
-        var fields = ['studentEmailId', 'teacherEmailId'];
-        studentHandler.connection.query = mysqlMock.expects('query')
-            .withArgs(`select studentEmailId from records where teacherEmailId = 'teacher2@gmail.com' and (studentEmailId in ('studentmiche1@example.com'))`)
-            .callsArgWith(2, null, results, fields);
+        it('should give  bad request for teacher', (done) => {
+            chai.request(app)
+                .post('/api/register')
+                .send({
+                    'students': [student1]
+                })
+                .end((err, res) => {
+                    should.not.exist(err);
+                    res.should.have.status(HTTPCODES.BAD_REQUEST);
+                    done();
+                });
+        });
 
-        // studentHandler.connection = mysqlMock;
+        it('should give bad request for student', (done) => {
+            chai.request(app)
+                .post('/api/register')
+                .send({
+                    'teacher': teacher1
+                })
+                .end((err, res) => {
+                    should.not.exist(err);
+                    res.should.have.status(HTTPCODES.BAD_REQUEST);
+                    done();
+                });
+        });
 
-        return bluebird.resolve(studentHandler.registerStudent({
-                "students": [
-                    "studentmiche@example.com"
-                ]
-            }))
-            .then(result => {
-                console.log("result", result);
-                // assert.deepEqual(result, fixture.jsonResponse);
-            })
-            .then(done)
-            .catch(err => done(err));
+        it('should register student', (done) => {
+            chai.request(app)
+                .post('/api/register')
+                .send({
+                    'teacher': teacher1,
+                    'students': [student1]
+                })
+                .end((err, res) => {
+                    should.not.exist(err);
+                    res.should.have.status(HTTPCODES.SUCCESS);
+                    done();
+                });
+        });
+
+        it('should not register student', (done) => {
+            chai.request(app)
+                .post('/api/register')
+                .send({
+                    'teacher': teacher1,
+                    'students': [student1]
+                })
+                .end((err, res) => {
+                    res.should.have.status(HTTPCODES.APP_ERROR);
+                    done();
+                });
+        });
+    });
+
+    // commonstudents api test
+    describe('GET /api/commonstudents', () => {
+        //api test for commonstudents
+        it('should give list of student', (done) => {
+            chai.request(app)
+                .get(`/api/commonstudents?teacher=${teacher1}`)
+                .end((err, res) => {
+                    res.should.have.status(HTTPCODES.SUCCESS);
+                    res.body.data.students.should.be.a('array');
+                    expect(res.body.success).to.be.true;
+                    done();
+                });
+        });
+
+        //api test for commonstudents
+        it('should not give list', (done) => {
+            chai.request(app)
+                .get(`/api/commonstudents?teacher=some@example.com`)
+                .end((err, res) => {
+                    res.should.have.status(HTTPCODES.SUCCESS);
+                    res.body.data.students.should.be.empty();
+                    expect(res.body.success).to.be.true;
+                    done();
+                });
+        });
+    });
+
+    // suspend api test
+    describe('POST /api/suspend', () => {
+        it('should suspend the student', (done) => {
+            chai.request(app)
+                .post(`/api/suspend`)
+                .send({
+                    'students': [student1]
+                })
+                .end((err, res) => {
+                    res.should.have.status(HTTPCODES.SUCCESS);
+                    res.body.students.should.have.key('data')
+                    expect(res.body.success).to.be.true;
+                    done();
+                });
+        });
+
+        it('should not suspend the student', (done) => {
+            chai.request(app)
+                .post(`/api/suspend`)
+                .send({
+                    'students': ["somerand@gmail.com"]
+                })
+                .end((err, res) => {
+                    res.should.have.status(HTTPCODES.APP_ERROR);
+                    done();
+                });
+        });
+    });
+
+    // retrievefornotifications api test
+    describe('POST /api/retrievefornotifications', () => {
+
+        it('should give the list of student', (done) => {
+            chai.request(app)
+                .post(`/api/retrievefornotifications`)
+                .send({
+                    "teacher": teacher1,
+                    "notification": `Hello students! ${student1}`
+                })
+                .end((err, res) => {
+                    res.should.have.status(HTTPCODES.SUCCESS);
+                    expect(res.body.success).to.be.true;
+                    done();
+                });
+        });
     });
 
 });
